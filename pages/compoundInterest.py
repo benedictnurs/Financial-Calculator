@@ -13,6 +13,8 @@ def configPage():
 )
 configPage()
 
+
+#Get the user input values
 def values():
     global initial, interest, time, intitializeChart
     st.title("Compund Interest Calculator 📈")
@@ -22,6 +24,8 @@ def values():
     intitializeChart = initial
 values()
 
+
+#calculate the interest and the years
 def totalCalculation():
     global initial
     for i in range(1, int(time + 1)):
@@ -31,24 +35,58 @@ def totalCalculation():
     st.subheader("The total in " + str(years) +  " years is: " + "$ " + total)
 totalCalculation()
 
+
+#data for the chart
+def data():
+  global x, y 
+  y = [intitializeChart]
+  x = list(range(0,int(time)+1))
+data()
+
+
+#creating the data frame for the chart
 def chart():
-  #Plotting the chart
   global intitializeChart, df
-  arr = [intitializeChart]
   for i in range(1, int(time + 1)):
     intitializeChart = (float(intitializeChart)) * (1 + float(interest * 0.01))
-    arr.append((round(float(intitializeChart), 2)))      
-  df = pd.DataFrame(arr, columns =['                                           Dollars'])
-  st.line_chart(df)
+    y.append((round(float(intitializeChart), 2)))      
+  df = pd.DataFrame(y, columns =['                                           Dollars'])
 chart()
 
+
+
+
+#plotting the chart
+def plotChart():
+  source = pd.DataFrame({
+  'Dollars': y,
+  'Years': x
+  })
+  
+  #Plotting the chart
+  plot = alt.Chart(source).mark_line().encode(
+    x = alt.X('Years:Q', axis = alt.Axis(
+        tickCount = df.shape[0],
+        grid = False,
+    )),
+    y = alt.Y('Dollars:Q', axis = alt.Axis(
+    ))
+  ).configure_view(
+    strokeOpacity=0
+  ).configure_axis(
+    labelFontSize=15,
+    titleFontSize=18,
+    titleFontWeight = 100
+  )
+  st.altair_chart(plot, use_container_width=True)
+plotChart()
+
+
+
+#the sidebar
 def sidebar():
   with st.sidebar:
     st.sidebar.success("Select Page Above")
     st.subheader("Increase Per Year Chart 💸")
     df
 sidebar()
-
-
-
-
