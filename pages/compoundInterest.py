@@ -64,6 +64,7 @@ def plotChart():
   })
   
   #Plotting the chart
+  global plot
   plot = alt.Chart(source).mark_line().encode(
     x = alt.X('Years:Q', axis = alt.Axis(
         tickCount = df.shape[0],
@@ -78,15 +79,20 @@ def plotChart():
     titleFontSize=18,
     titleFontWeight = 100
   )
-  st.altair_chart(plot, use_container_width=True)
+
 plotChart()
 
+def tabs():
+  tab1, tab2 = st.tabs(["📈 Chart", "🗃 Data"])
+  tab1.subheader('Increase Per Year Chart 💸')
+  tab1.altair_chart(plot, use_container_width=True)
+  tab2.subheader('Increase Per Year Table 💸')
+  tab2.write(df)
+tabs()
 
 
 #the sidebar
 def sidebar():
   with st.sidebar:
     st.sidebar.success("Select Page Above")
-    st.subheader("Increase Per Year Chart 💸")
-    df
 sidebar()
