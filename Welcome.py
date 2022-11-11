@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import altair as alt
-import yfinance as yf
 
 #streamlit run main.py
 def configPage():

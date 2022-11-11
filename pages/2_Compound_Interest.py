@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
+
 #streamlit run main.py
 def configPage():
   st.set_page_config(
@@ -53,21 +54,17 @@ def chart():
 chart()
 
 
-
-
 #plotting the chart
 def plotChart():
-  global source
-  
+  global source, plot
+
   source = pd.DataFrame({
   'Years': x,
   'Dollars': y
-  
   })
 
 
   #Plotting the chart
-  global plot
   plot = alt.Chart(source).mark_line().encode(
     x = alt.X('Years:Q', axis = alt.Axis(
         tickCount = source.shape[0],
