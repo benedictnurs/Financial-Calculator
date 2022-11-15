@@ -55,9 +55,11 @@ def years():
     year = month/12
 years()
 
-def selection():
-    global monthlyPayment, upfront, totalPaid, totalLoan
+def sideVariables():
+    global monthlyPayment, upFront, totalPaid, totalLoan , addedCost, interestPaid
     agree = st.checkbox('Include All Fees in Loan')
+    
+    
     if agree:
         if rate == 0 :
             monthlyPayment =  (price - down)/month 
@@ -69,37 +71,50 @@ def selection():
         else:
             monthlyPayment = (price - down) * (rate*(1+rate)**month)/((1+rate)**month-1) 
     if agree:
-        upfront = down
+        upFront = down
         totalPaid = (monthlyPayment * month)+taxRate
         totalLoan = (price - down) + taxRate
 
     else:
-        upfront = taxRate + down
+        upFront = taxRate + down
         totalPaid = monthlyPayment * month
         totalLoan = price - down
-selection()
 
 
-interestPaid = totalPaid - totalLoan 
-if rate == 0:
-    interestPaid = 0
-else:
     interestPaid = totalPaid - totalLoan 
-addedCost = total + interestPaid
+    
+    
+    if rate == 0:
+        interestPaid = 0
+    else:
+        interestPaid = totalPaid - totalLoan 
+    
+    
+    addedCost = total + interestPaid
+sideVariables()
+
+
 
 source = pd.DataFrame({"Loan Breakdown": ["Principal", "Interest"], "Dollars": [total, interestPaid], "Percentages":["P","I"]})
 pie = alt.Chart(source).mark_arc().encode(
         theta=alt.Theta(field="Dollars", type="quantitative"),
         color=alt.Color(field="Loan Breakdown", type="nominal"),    
         tooltip=['Loan Breakdown', alt.Tooltip('Dollars:Q',  format="$,.2f")]
-    ).interactive()
+    ).interactive(
+
+    ).configure_legend(
+     labelFontWeight = 100,
+     labelFontSize = 12,
+     titleFontSize = 15,
+     titleFontWeight = 100
+    )
 
 def sidePage():        
     with topCols[1]:
         html_str = f"""
         <style>
         .a {{
-        font: 2vw sans-serif;
+        font: 24px sans-serif;
         font-weight: bold;
         }}
 
@@ -110,7 +125,7 @@ def sidePage():
         </style>
         <h3 class="a top">Monthly: $ {(str("{:,}".format(round(float(monthlyPayment), 2))))}</h3>
         <h3 class="a">Sales Tax: $ {(str("{:,}".format(round(float(taxRate), 2))))}</h3>
-        <h3 class="a">Upfront: $ {(str("{:,}".format(round(float(upfront), 2))))}</h3>
+        <h3 class="a">Upfront: $ {(str("{:,}".format(round(float(upFront), 2))))}</h3>
         <h3 class="a"> Loan Cost: $ {(str("{:,}".format(round(float(totalLoan), 2))))}</h3>
         <h3 class="a top">{month} month total: $ {(str("{:,}".format(round(float(totalPaid), 2))))}</h3>
         <h3 class="a">Total Interest: $ {(str("{:,}".format(round(float(interestPaid), 2))))}</h3>
@@ -118,6 +133,40 @@ def sidePage():
         """
         st.markdown(html_str, unsafe_allow_html=True)
 sidePage()
+
+def data():
+  global x, y
+  y = [totalPaid]
+  x = list(range(0,int(month)+1))
+data()
+
+def chartCalculation():
+    global totalPaid
+    for i in range(1, int(month + 1)):
+        totalPaid = totalPaid - monthlyPayment
+        y.append(round((totalPaid),2))
+chartCalculation()
+
+
+def plotChart():
+    global financeChart, priceAndMonth
+    priceAndMonth = pd.DataFrame({
+    'Months': x,
+    'Dollars': y
+    })
+    financeChart = alt.Chart(priceAndMonth).mark_line().encode(
+    x = alt.X('Months:Q', axis = alt.Axis(
+        grid = False,
+    )),
+    y ='Dollars'
+    ).configure_view(
+    strokeOpacity=0
+    ).configure_axis(
+    labelFontSize=15,
+    titleFontSize=18,
+    titleFontWeight = 100
+    )
+plotChart()
 
 def tabs():
   tabs = st.tabs(["Chart", "Table",])
@@ -132,14 +181,23 @@ def tabs():
         st.altair_chart(pie, use_container_width=True)
   with cols[1]:
         st.subheader("Loan By Year")
-  
+        st.altair_chart(financeChart, use_container_width = True)
+
   #Data
   with tab_data:
         st.subheader('Data')
+        st.table(priceAndMonth)
 tabs()
 
 
-
-
+def style(): 
+  hide_table_row_index = """
+            <style>
+            thead tr th:first-child {display:none}
+            tbody th {display:none}
+            </style>
+            """
+  st.markdown(hide_table_row_index, unsafe_allow_html=True)
+style()
 
 
