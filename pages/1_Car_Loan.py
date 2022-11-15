@@ -56,7 +56,7 @@ def years():
 years()
 
 def selection():
-    global monthlyPayment, upfront
+    global monthlyPayment, upfront, totalPaid, totalLoan
     agree = st.checkbox('Include All Fees in Loan')
     if agree:
         if rate == 0 :
@@ -69,41 +69,55 @@ def selection():
         else:
             monthlyPayment = (price - down) * (rate*(1+rate)**month)/((1+rate)**month-1) 
     if agree:
-        upfront = taxRate + down
+        upfront = down
+        totalPaid = (monthlyPayment * month)+taxRate
+        totalLoan = (price - down) + taxRate
+
     else:
         upfront = taxRate + down
+        totalPaid = monthlyPayment * month
+        totalLoan = price - down
 selection()
 
 
+interestPaid = totalPaid - totalLoan 
+if rate == 0:
+    interestPaid = 0
+else:
+    interestPaid = totalPaid - totalLoan 
+addedCost = total + interestPaid
 
-interestPaid = round((total - (monthlyPayment * month)),2)
-
-
-
-source = pd.DataFrame({"Loan Breakdown": ["Principal", "Interest"], "Dollars": [total, interestPaid]})
+source = pd.DataFrame({"Loan Breakdown": ["Principal", "Interest"], "Dollars": [total, interestPaid], "Percentages":["P","I"]})
 pie = alt.Chart(source).mark_arc().encode(
         theta=alt.Theta(field="Dollars", type="quantitative"),
         color=alt.Color(field="Loan Breakdown", type="nominal"),    
         tooltip=['Loan Breakdown', alt.Tooltip('Dollars:Q',  format="$,.2f")]
     ).interactive()
 
+def sidePage():        
+    with topCols[1]:
+        html_str = f"""
+        <style>
+        .a {{
+        font: 2vw sans-serif;
+        font-weight: bold;
+        }}
 
-with topCols[1]:
-    html_str = f"""
-    <style>
-    p.a {{
-    font: 20vw sans-serif;
-    }}
-    </style>
-    <p></p>
-    <h3 class="a">Monthly Pay: $ {(str("{:,}".format(round(float(monthlyPayment), 2))))}</h3>
-    <h3 class="a">Sale Tax: $ {(str("{:,}".format(round(float(taxRate), 2))))}</h3>
-    <h3 class="a">Upfront: $ {(str("{:,}".format(round(float(upfront), 2))))}</h3>
-    <h3 class="a">Total Interest: $ {(str("{:,}".format(round(float(interestPaid), 2))))}</h3>
-    <h3 class="a">Total Cost: $ {(str("{:,}".format(round(float(monthlyPayment), 2))))}</h3>
-    """
-    st.markdown(html_str, unsafe_allow_html=True)
+        .top{{
+            margin-top:1.5em;
 
+        }}
+        </style>
+        <h3 class="a top">Monthly: $ {(str("{:,}".format(round(float(monthlyPayment), 2))))}</h3>
+        <h3 class="a">Sales Tax: $ {(str("{:,}".format(round(float(taxRate), 2))))}</h3>
+        <h3 class="a">Upfront: $ {(str("{:,}".format(round(float(upfront), 2))))}</h3>
+        <h3 class="a"> Loan Cost: $ {(str("{:,}".format(round(float(totalLoan), 2))))}</h3>
+        <h3 class="a top">{month} month total: $ {(str("{:,}".format(round(float(totalPaid), 2))))}</h3>
+        <h3 class="a">Total Interest: $ {(str("{:,}".format(round(float(interestPaid), 2))))}</h3>
+        <h3 class="a">Total Cost: $ {(str("{:,}".format(round(float(addedCost), 2))))}</h3>
+        """
+        st.markdown(html_str, unsafe_allow_html=True)
+sidePage()
 
 def tabs():
   tabs = st.tabs(["Chart", "Table",])
