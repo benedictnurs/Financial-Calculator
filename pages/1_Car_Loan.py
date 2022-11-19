@@ -95,11 +95,11 @@ sideVariables()
 
 
 
-source = pd.DataFrame({"Loan Breakdown": ["Principal", "Interest"], "Dollars": [total, interestPaid], "Percentages":["P","I"]})
+source = pd.DataFrame({"Breakdown": ["Principal", "Interest"], "Dollars": [total, interestPaid], "Percentages":["P","I"]})
 pie = alt.Chart(source).mark_arc().encode(
         theta=alt.Theta(field="Dollars", type="quantitative"),
-        color=alt.Color(field="Loan Breakdown", type="nominal"),    
-        tooltip=['Loan Breakdown', alt.Tooltip('Dollars:Q',  format="$,.2f")]
+        color=alt.Color(field="Breakdown", type="nominal"),    
+        tooltip=['Breakdown', alt.Tooltip('Dollars:Q',  format="$,.2f")]
     ).interactive(
 
     ).configure_legend(
@@ -149,12 +149,12 @@ chartCalculation()
 
 
 def plotChart():
-    global financeChart, priceAndMonth
-    priceAndMonth = pd.DataFrame({
-    'Months': x,
-    'Dollars': y
+    global monthlyChart, df
+    df = pd.DataFrame({
+    'Dollars': y,
+    'Months': x
     })
-    financeChart = alt.Chart(priceAndMonth).mark_line().encode(
+    monthlyChart = alt.Chart(df).mark_line().encode(
     x = alt.X('Months:Q', axis = alt.Axis(
         grid = False,
     )),
@@ -168,6 +168,28 @@ def plotChart():
     )
 plotChart()
 
+
+def dataFrame2():
+    global df2, yearlyChart
+    df2 = df.iloc[::12,:]
+    del df2["Months"]
+    df2['Years'] = (df['Months'] / 12).round(2)
+    yearlyChart = alt.Chart(df2).mark_bar().encode(
+    x = alt.X('Years:Q', axis = alt.Axis(
+        grid = False,
+    )),
+    y ='Dollars'
+    ).configure_view(
+    strokeOpacity=0
+    ).configure_axis(
+    labelFontSize=15,
+    titleFontSize=18,
+    titleFontWeight = 100
+    )
+dataFrame2()
+
+
+
 def tabs():
   tabs = st.tabs(["Chart", "Table",])
   #Chart
@@ -180,13 +202,24 @@ def tabs():
         st.subheader("Loan Breakdown")
         st.altair_chart(pie, use_container_width=True)
   with cols[1]:
-        st.subheader("Loan By Year")
-        st.altair_chart(financeChart, use_container_width = True)
-
+        header = st.empty()
+        agree = st.checkbox('Yearly') 
+        chart = st.empty()
+        if agree:
+            header.subheader('Yearly Chart')
+            chart.altair_chart(yearlyChart, use_container_width = True)
+        else:
+            header.subheader('Monthly Chart')
+            chart.altair_chart(monthlyChart, use_container_width = True)
   #Data
   with tab_data:
         st.subheader('Data')
-        st.table(priceAndMonth)
+        agree = st.checkbox('Monthly Loan Total') 
+        data = st.empty()
+        if agree:
+            data.table(df)
+        else:
+            data.table(df2)
 tabs()
 
 
